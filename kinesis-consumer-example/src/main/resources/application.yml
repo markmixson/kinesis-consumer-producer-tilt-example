@@ -1,0 +1,36 @@
+spring:
+  main:
+    web-application-type: none
+  cloud:
+    stream:
+      bindings:
+        processPayload-in-0:
+          destination: test_stream
+          group: test_stream_group
+          consumer:
+            useNativeDecoding: true
+      kinesis:
+        binder:
+          kpl-kcl-enabled: true
+        bindings:
+          processPayload-in-0:
+            consumer:
+              listenerMode: batch
+              shardIteratorType: TRIM_HORIZON
+      function:
+        definition: processPayload
+
+cloud:
+  aws:
+    stack:
+      auto: false
+    region:
+      static: us-east-1
+
+logging:
+  level:
+    com:
+      amazonaws: INFO
+    org:
+      apache:
+        http: INFO

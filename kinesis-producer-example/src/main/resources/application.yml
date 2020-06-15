@@ -1,0 +1,31 @@
+spring:
+  main:
+    web-application-type: none
+  cloud:
+    stream:
+      bindings:
+        producePayload-out-0:
+          destination: test_stream
+          producer:
+            partitionKeyExpression: "0"
+            useNativeEncoding: true
+      function:
+        definition: producePayload
+      kinesis:
+        binder:
+          kpl-kcl-enabled: true
+
+cloud:
+  aws:
+    stack:
+      auto: false
+    region:
+      static: us-east-1
+
+logging:
+  level:
+    com:
+      amazonaws: INFO
+    org:
+      apache:
+        http: INFO
