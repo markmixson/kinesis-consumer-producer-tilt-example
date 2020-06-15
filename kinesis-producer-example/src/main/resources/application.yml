@@ -8,7 +8,7 @@ spring:
           destination: test_stream
           producer:
             partitionKeyExpression: "0"
-            useNativeEncoding: true
+            useNativeEncoding: false
       function:
         definition: producePayload
       kinesis:

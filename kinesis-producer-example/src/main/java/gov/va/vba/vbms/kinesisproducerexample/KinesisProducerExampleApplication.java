@@ -3,6 +3,8 @@ package gov.va.vba.vbms.kinesisproducerexample;
 import com.amazonaws.SDKGlobalConfiguration;
 import com.amazonaws.services.kinesis.producer.KinesisProducer;
 import com.amazonaws.services.kinesis.producer.KinesisProducerConfiguration;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import gov.va.vba.vbms.kinesisexamplecommons.data.Payload;
 import gov.va.vba.vbms.kinesisexamplecommons.stream.Event;
 import org.apache.commons.lang.RandomStringUtils;
@@ -39,6 +41,7 @@ public class KinesisProducerExampleApplication {
     private final KinesisProducerExampleConfiguration config = new KinesisProducerExampleConfiguration();
     private final KinesisProducer kinesisProducer = new KinesisProducer(getKinesisProducerConfiguration());
     private final AtomicInteger count = new AtomicInteger();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public static void main(String[] args) {
         SpringApplication.run(KinesisProducerExampleApplication.class, args);
@@ -54,7 +57,7 @@ public class KinesisProducerExampleApplication {
         return args -> {
             for (int i = 0; i < TOTAL_MESSAGE_COUNT; i++) {
                 kinesisProducer.addUserRecord(STREAM_NAME, PARTITION_KEY,
-                        ByteBuffer.wrap(SerializationUtils.serialize(getEvent())));
+                        ByteBuffer.wrap(objectMapper.writeValueAsBytes(getEvent())));
             }
         };
     }

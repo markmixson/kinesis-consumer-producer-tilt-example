@@ -8,7 +8,7 @@ spring:
           destination: test_stream
           group: test_stream_group
           consumer:
-            useNativeDecoding: true
+            useNativeDecoding: false
       kinesis:
         binder:
           kpl-kcl-enabled: true
