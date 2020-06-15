@@ -1,5 +1,6 @@
 package gov.va.vba.vbms.kinesisconsumerexample;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchAsync;
@@ -8,12 +9,9 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsync;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsyncClientBuilder;
 import com.amazonaws.services.kinesis.AmazonKinesisAsync;
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClientBuilder;
-import com.amazonaws.services.kinesis.producer.KinesisProducerConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.net.URI;
-import java.net.URISyntaxException;
+import org.springframework.context.annotation.Primary;
 
 /**
  * Configuration to make localstack work for the KCL and Kinesis Binder
@@ -49,13 +47,8 @@ public class KinesisConsumerExampleConfiguration {
     }
 
     @Bean
-    public KinesisProducerConfiguration kinesisProducerConfiguration() throws URISyntaxException {
-        URI kinesisUri = new URI(LOCALSTACK_EDGE_URL);
-        return new KinesisProducerConfiguration()
-                .setCredentialsProvider(new DefaultAWSCredentialsProviderChain())
-                .setRegion(AWS_REGION)
-                .setKinesisEndpoint(kinesisUri.getHost())
-                .setKinesisPort(kinesisUri.getPort())
-                .setVerifyCertificate(false);
+    @Primary
+    public AWSCredentialsProvider buildDefaultAWSCredentialsProvider() {
+        return new DefaultAWSCredentialsProviderChain();
     }
 }
