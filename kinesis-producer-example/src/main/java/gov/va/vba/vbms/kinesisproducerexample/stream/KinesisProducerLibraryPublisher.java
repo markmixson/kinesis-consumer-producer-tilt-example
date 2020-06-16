@@ -7,6 +7,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.ListenableFuture;
 import gov.va.vba.vbms.kinesisexamplecommons.stream.Event;
+import gov.va.vba.vbms.kinesisexamplecommons.stream.PublishInfo;
+import gov.va.vba.vbms.kinesisexamplecommons.stream.Publisher;
 import gov.va.vba.vbms.kinesisproducerexample.KinesisProducerExampleConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

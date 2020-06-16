@@ -1,4 +1,4 @@
-package gov.va.vba.vbms.kinesisproducerexample.stream;
+package gov.va.vba.vbms.kinesisexamplecommons.stream;
 
 import java.util.List;
 
