@@ -1,24 +1,27 @@
 package gov.va.vba.vbms.kinesisproducerexample;
 
 import com.amazonaws.SDKGlobalConfiguration;
-import com.amazonaws.services.kinesis.producer.KinesisProducer;
-import com.amazonaws.services.kinesis.producer.KinesisProducerConfiguration;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.amazonaws.services.kinesis.producer.UserRecordResult;
+import com.google.common.util.concurrent.ListenableFuture;
 import gov.va.vba.vbms.kinesisexamplecommons.data.Payload;
 import gov.va.vba.vbms.kinesisexamplecommons.stream.Event;
+import gov.va.vba.vbms.kinesisproducerexample.stream.KinesisProducerLibraryPublisher;
+import gov.va.vba.vbms.kinesisproducerexample.stream.PublishInfo;
+import gov.va.vba.vbms.kinesisproducerexample.stream.Publisher;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.lang.SerializationUtils;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 
-import java.net.URISyntaxException;
-import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Slf4j
 @SpringBootApplication
 public class KinesisProducerExampleApplication {
 
@@ -38,10 +41,12 @@ public class KinesisProducerExampleApplication {
     private final static String STREAM_NAME = "test_stream";
     private final static String PARTITION_KEY = "0";
 
-    private final KinesisProducerExampleConfiguration config = new KinesisProducerExampleConfiguration();
-    private final KinesisProducer kinesisProducer = new KinesisProducer(getKinesisProducerConfiguration());
     private final AtomicInteger count = new AtomicInteger();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final Publisher<Event, List<ListenableFuture<UserRecordResult>>> publisher;
+
+    KinesisProducerExampleApplication(KinesisProducerLibraryPublisher publisher) {
+        this.publisher = publisher;
+    }
 
     public static void main(String[] args) {
         SpringApplication.run(KinesisProducerExampleApplication.class, args);
@@ -55,10 +60,11 @@ public class KinesisProducerExampleApplication {
     @Bean
     public CommandLineRunner commandLineRunner(ApplicationContext ctx) {
         return args -> {
+            List<Event> events = new ArrayList<>();
             for (int i = 0; i < TOTAL_MESSAGE_COUNT; i++) {
-                kinesisProducer.addUserRecord(STREAM_NAME, PARTITION_KEY,
-                        ByteBuffer.wrap(objectMapper.writeValueAsBytes(getEvent())));
+                events.add(getEvent());
             }
+            publisher.publish(events, new PublishInfo(STREAM_NAME, PARTITION_KEY));
         };
     }
 
@@ -70,17 +76,10 @@ public class KinesisProducerExampleApplication {
         Payload payload = new Payload();
         payload.setId(RandomStringUtils.randomAlphanumeric(count.incrementAndGet() * 100));
         Event event = new Event();
+        event.setId(UUID.randomUUID());
         event.setSubject(payload);
         event.setOriginator(ORIGINATOR);
         event.setType(MESSAGE_TYPE);
         return event;
-    }
-
-    private KinesisProducerConfiguration getKinesisProducerConfiguration() {
-        try {
-            return config.kinesisProducerConfiguration();
-        } catch (URISyntaxException e) {
-            throw new RuntimeException("cannot get configuration!", e);
-        }
     }
 }
