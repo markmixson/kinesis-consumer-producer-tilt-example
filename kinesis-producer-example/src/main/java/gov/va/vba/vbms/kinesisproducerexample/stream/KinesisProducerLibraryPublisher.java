@@ -21,10 +21,11 @@ import java.util.stream.Collectors;
 public class KinesisProducerLibraryPublisher implements Publisher<Event, List<ListenableFuture<UserRecordResult>>> {
 
     private final KinesisProducer kinesisProducer;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
-    KinesisProducerLibraryPublisher(KinesisProducer kinesisProducer) {
+    KinesisProducerLibraryPublisher(KinesisProducer kinesisProducer, ObjectMapper objectMapper) {
         this.kinesisProducer = kinesisProducer;
+        this.objectMapper = objectMapper;
     }
 
     @Override
