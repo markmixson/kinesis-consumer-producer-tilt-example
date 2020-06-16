@@ -1,7 +1,6 @@
 package gov.va.vba.vbms.kinesisproducerexample.stream;
 
 import com.amazonaws.services.kinesis.producer.KinesisProducer;
-import com.amazonaws.services.kinesis.producer.KinesisProducerConfiguration;
 import com.amazonaws.services.kinesis.producer.UserRecordResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -30,14 +30,16 @@ public class KinesisProducerLibraryPublisher implements Publisher<Event, List<Li
 
     @Override
     public List<ListenableFuture<UserRecordResult>> publish(List<Event> data, PublishInfo info) {
+        AtomicLong count = new AtomicLong(0L);
         List<ListenableFuture<UserRecordResult>> results = data.stream()
                 .map(event -> {
                     ByteBuffer byteBuffer = ByteBuffer.wrap(getSerializedEvent(event));
+                    count.addAndGet(byteBuffer.array().length);
                     return kinesisProducer.addUserRecord(info.getStreamName(), info.getPartitionKey(), byteBuffer);
                 })
                 .collect(Collectors.toList());
         kinesisProducer.flushSync();
-        log.info("finished writing " + results.size() + " events to stream");
+        log.info("finished writing " + results.size() + " events of size " + count.get() + " total bytes to stream");
         return results;
     }
 
