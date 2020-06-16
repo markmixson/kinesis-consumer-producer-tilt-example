@@ -9,8 +9,6 @@ spring:
           producer:
             partitionKeyExpression: "0"
             useNativeEncoding: false
-      function:
-        definition: producePayload
       kinesis:
         binder:
           kpl-kcl-enabled: true

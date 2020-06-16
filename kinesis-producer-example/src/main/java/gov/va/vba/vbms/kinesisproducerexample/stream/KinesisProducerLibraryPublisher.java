@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.ListenableFuture;
 import gov.va.vba.vbms.kinesisexamplecommons.stream.Event;
 import gov.va.vba.vbms.kinesisproducerexample.KinesisProducerExampleConfiguration;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.net.URISyntaxException;
@@ -15,6 +16,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Component
 public class KinesisProducerLibraryPublisher implements Publisher<Event, List<ListenableFuture<UserRecordResult>>> {
 
@@ -31,6 +33,8 @@ public class KinesisProducerLibraryPublisher implements Publisher<Event, List<Li
                     kinesisProducer.addUserRecord(info.getStreamName(), info.getPartitionKey(), byteBuffer);
             results.add(future);
         }
+        kinesisProducer.flushSync();
+        log.info("finished writing " + results.size() + " events to stream");
         return results;
     }
 
