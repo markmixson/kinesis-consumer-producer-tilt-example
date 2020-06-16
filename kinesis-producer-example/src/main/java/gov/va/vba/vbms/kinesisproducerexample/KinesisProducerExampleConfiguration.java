@@ -4,6 +4,7 @@ import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.kinesis.AmazonKinesisAsync;
 import com.amazonaws.services.kinesis.AmazonKinesisAsyncClientBuilder;
+import com.amazonaws.services.kinesis.producer.KinesisProducer;
 import com.amazonaws.services.kinesis.producer.KinesisProducerConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,5 +37,10 @@ public class KinesisProducerExampleConfiguration {
                 .setKinesisEndpoint(kinesisUri.getHost())
                 .setKinesisPort(kinesisUri.getPort())
                 .setVerifyCertificate(false);
+    }
+
+    @Bean
+    public KinesisProducer kinesisProducer() throws URISyntaxException {
+        return new KinesisProducer(kinesisProducerConfiguration());
     }
 }

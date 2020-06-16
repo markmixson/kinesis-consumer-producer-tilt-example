@@ -20,22 +20,15 @@ import java.util.stream.Collectors;
 @Component
 public class KinesisProducerLibraryPublisher implements Publisher<Event, List<ListenableFuture<UserRecordResult>>> {
 
-    private final KinesisProducerConfiguration kinesisProducerConfiguration;
+    private final KinesisProducer kinesisProducer;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    KinesisProducerLibraryPublisher(KinesisProducerConfiguration kinesisProducerConfiguration) {
-        this.kinesisProducerConfiguration = kinesisProducerConfiguration;
+    KinesisProducerLibraryPublisher(KinesisProducer kinesisProducer) {
+        this.kinesisProducer = kinesisProducer;
     }
 
     @Override
     public List<ListenableFuture<UserRecordResult>> publish(List<Event> data, PublishInfo info) {
-        List<ListenableFuture<UserRecordResult>> results = getResults(data, info);
-        log.info("finished writing " + results.size() + " events to stream");
-        return results;
-    }
-
-    private List<ListenableFuture<UserRecordResult>> getResults(List<Event> data, PublishInfo info) {
-        KinesisProducer kinesisProducer = new KinesisProducer(kinesisProducerConfiguration);
         List<ListenableFuture<UserRecordResult>> results = data.stream()
                 .map(event -> {
                     ByteBuffer byteBuffer = ByteBuffer.wrap(getSerializedEvent(event));
@@ -43,6 +36,7 @@ public class KinesisProducerLibraryPublisher implements Publisher<Event, List<Li
                 })
                 .collect(Collectors.toList());
         kinesisProducer.flushSync();
+        log.info("finished writing " + results.size() + " events to stream");
         return results;
     }
 
