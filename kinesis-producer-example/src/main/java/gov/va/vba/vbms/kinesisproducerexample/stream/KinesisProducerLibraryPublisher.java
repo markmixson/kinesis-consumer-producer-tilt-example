@@ -32,15 +32,18 @@ public class KinesisProducerLibraryPublisher implements Publisher<Event, List<Li
     public List<ListenableFuture<UserRecordResult>> publish(List<Event> data, PublishInfo info) {
         AtomicLong count = new AtomicLong(0L);
         List<ListenableFuture<UserRecordResult>> results = data.stream()
-                .map(event -> {
-                    ByteBuffer byteBuffer = ByteBuffer.wrap(getSerializedEvent(event));
-                    count.addAndGet(byteBuffer.array().length);
-                    return kinesisProducer.addUserRecord(info.getStreamName(), info.getPartitionKey(), byteBuffer);
-                })
+                .map(event -> getResult(event, count, info))
                 .collect(Collectors.toList());
         kinesisProducer.flushSync();
         log.info("finished writing " + results.size() + " events of size " + count.get() + " total bytes to stream");
         return results;
+    }
+
+    private ListenableFuture<UserRecordResult> getResult(Event event, AtomicLong count, PublishInfo info) {
+        byte[] serializedEvent = getSerializedEvent(event);
+        ByteBuffer byteBuffer = ByteBuffer.wrap(serializedEvent);
+        count.addAndGet(byteBuffer.array().length);
+        return kinesisProducer.addUserRecord(info.getStreamName(), info.getPartitionKey(), byteBuffer);
     }
 
     private byte[] getSerializedEvent(Event event) {
