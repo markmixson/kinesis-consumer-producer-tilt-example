@@ -1,0 +1,14 @@
+cloud:
+  aws:
+    stack:
+      auto: false
+    region:
+      static: us-east-1
+
+logging:
+  level:
+    com:
+      amazonaws: INFO
+    org:
+      apache:
+        http: INFO

@@ -18,6 +18,7 @@
         <module>kinesis-example-commons</module>
         <module>kinesis-consumer-example</module>
         <module>kinesis-producer-example</module>
+        <module>kinesis-sync-producer-example</module>
     </modules>
 
     <properties>
