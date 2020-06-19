@@ -53,7 +53,7 @@ public class KinesisSyncProducerExampleApplication {
     }
 
     /**
-     * Generates {@value #TOTAL_MESSAGE_COUNT} events via KPL
+     * Generates {@value #TOTAL_MESSAGE_COUNT} events through the AWS SDK
      * @param ctx the app context
      * @return commandlinerunner
      */

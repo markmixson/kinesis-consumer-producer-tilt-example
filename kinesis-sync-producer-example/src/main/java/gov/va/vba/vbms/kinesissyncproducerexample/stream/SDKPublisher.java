@@ -1,11 +1,6 @@
 package gov.va.vba.vbms.kinesissyncproducerexample.stream;
 
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.kinesis.AmazonKinesis;
-import com.amazonaws.services.kinesis.AmazonKinesisClientBuilder;
 import com.amazonaws.services.kinesis.model.PutRecordsRequest;
 import com.amazonaws.services.kinesis.model.PutRecordsRequestEntry;
 import com.amazonaws.services.kinesis.model.PutRecordsResult;
@@ -19,7 +14,6 @@ import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,14 +22,18 @@ import java.util.stream.Collectors;
 public class SDKPublisher implements Publisher<Event, List<PutRecordsResult>> {
 
     private final static int BATCH_SIZE = 50;
-    private final static String AWS_REGION = "us-east-1";
-    private final static String URL = "https://localhost:4568";
-    private final AmazonKinesis kinesisClient = AmazonKinesisClientBuilder.standard()
-            .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials("", "")))
-            .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(URL, AWS_REGION))
-            .withClientConfiguration(new ClientConfiguration().withGzip(true))
-            .build();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+    private final AmazonKinesis amazonKinesis;
+
+    /**
+     * Synchronous Kinesis producer using the AWS SDK
+     * @param objectMapper mapper to generate JSON data
+     * @param amazonKinesis Kinesis Client
+     */
+    SDKPublisher(ObjectMapper objectMapper, AmazonKinesis amazonKinesis) {
+        this.objectMapper = objectMapper;
+        this.amazonKinesis = amazonKinesis;
+    }
 
     /**
      * Publishes {@link Event}s into AWS Kinesis.  This is done synchronously to preserve ordering.
@@ -61,20 +59,30 @@ public class SDKPublisher implements Publisher<Event, List<PutRecordsResult>> {
     }
 
     private void handleChunk(List<Event> chunk, List<PutRecordsResult> results, PublishInfo info) {
+        PutRecordsRequest request = getPutRecordsRequest(chunk, info);
+        createStreamIfMissing(info);
+        PutRecordsResult chunkResults = amazonKinesis.putRecords(request);
+        results.add(chunkResults);
+        log.info("Produced " + chunkResults.getRecords().size() + " records of size "
+                + request.getRecords().stream()
+                .map(record -> record.getData().array().length)
+                .reduce(0, Integer::sum) + " to the stream " + info.getStreamName()
+                        + " with " + chunkResults.getFailedRecordCount() + " errors.");
+    }
+
+    private PutRecordsRequest getPutRecordsRequest(List<Event> chunk, PublishInfo info) {
         PutRecordsRequest request = new PutRecordsRequest();
         request.setStreamName(info.getStreamName());
-        request.setRecords(getEntries(chunk, info));
-        createStreamIfMissing(info);
-        results.add(kinesisClient.putRecords(request));
+        List<PutRecordsRequestEntry> entries = getEntries(chunk, info);
+        request.setRecords(entries);
+        return request;
     }
 
     private void createStreamIfMissing(PublishInfo info) {
-        if (!kinesisClient.listStreams().getStreamNames().contains(info.getStreamName())) {
-            kinesisClient.createStream(info.getStreamName(), 1);
+        if (!amazonKinesis.listStreams().getStreamNames().contains(info.getStreamName())) {
+            amazonKinesis.createStream(info.getStreamName(), 1);
             log.info("stream " + info.getStreamName() + " created.");
         }
-        log.info(info.getStreamName() + " state: " +
-                kinesisClient.describeStream(info.getStreamName()).getStreamDescription().getStreamStatus());
     }
 
     private List<PutRecordsRequestEntry> getEntries(List<Event> chunk, PublishInfo info) {
