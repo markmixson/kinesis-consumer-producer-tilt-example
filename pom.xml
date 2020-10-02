@@ -19,6 +19,7 @@
         <module>kinesis-consumer-example</module>
         <module>kinesis-producer-example</module>
         <module>kinesis-sync-producer-example</module>
+        <module>kinesis-producer-example-synchronous</module>
     </modules>
 
     <properties>
